@@ -11,6 +11,8 @@
 |
 */
 
+// use App\Version1\Model\EmployeeModel;
+
 Route::pattern('url', '.*');
 
 Route::get('/', 'WelcomeController');

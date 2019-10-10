@@ -69,5 +69,11 @@ class RouteServiceProvider extends ServiceProvider
              ->middleware('api')
              ->namespace($this->namespace)
              ->group(base_path('routes/api.php'));
+
+        Route::prefix('api/v1')
+             ->name('api.v1.')
+            //  ->middleware(['api','jwt.recycle']) // 'signiture'
+             ->namespace($this->namespace)
+             ->group(base_path('routes/v1/api/temperature_inspection.php'));                          
     }
 }
