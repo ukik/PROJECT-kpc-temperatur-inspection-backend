@@ -7,7 +7,7 @@ class TableEmployeeModel extends Authenticatable
 {
     use Notifiable;
 
-    use \FilterPaginateUtility;
+    use \FilterPaginateAdvanceUtility;
     use \TableEmployeeFilter;
 
     public $incrementing = false;

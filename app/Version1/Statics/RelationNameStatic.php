@@ -2,6 +2,7 @@
 
 /**
  * consist array of eloquent relationship name as key and real table as value
+ * digunakan untuk mengubah nama relasi yang akan di model menjadi tabel yang ada di mysql
  */
 trait RelationNameStatic
 {

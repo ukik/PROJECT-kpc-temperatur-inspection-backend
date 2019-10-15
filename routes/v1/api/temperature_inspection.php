@@ -1,6 +1,6 @@
 <?php
 
-Route::name('')->middleware([\Barryvdh\Cors\HandleCors::class, 'throttle:60,1', 'bindings'])->group(function () {
+Route::name('')->middleware([\Barryvdh\Cors\HandleCors::class, 'mutation', 'throttle:60,1', 'bindings'])->group(function () {
 
     Route::get('login', 'AuthController@login')->name('index');
 

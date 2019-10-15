@@ -6,7 +6,7 @@
 # support massive data up to 50000 or even more (estimation)
 # clustering by year & month
 
-trait FilterPaginateAdvanceUtility
+trait FilterPaginateAdvanceUtility__
 {
 
     use \RelationNameStatic;
@@ -81,7 +81,7 @@ trait FilterPaginateAdvanceUtility
 
         $prefix_table = $prefix == null ? $this->table : strval($prefix."{$year}_{$month}");
 
-        return $query
+        $query = $query
             // ->orderBy($request->sortBy, $request->direction)
             ->from($prefix_table)
             ->where(function ($query) use ($request, $params) {
@@ -110,7 +110,7 @@ trait FilterPaginateAdvanceUtility
                     }
                 }
             })->paginate($request->per_page);
-
+        return $query;
     }
 
     protected function isRelatedColumn($request)
@@ -123,31 +123,74 @@ trait FilterPaginateAdvanceUtility
         $search_column = explode('.', $request);
         $final_column = [];
 
+        $dynamic_table = strval("_".request()->year."_".request()->month);
+        
         foreach ($search_column as $search_key => $search_value) {
             foreach ($relation as $relation_key => $relation_value) {
                 if ($search_value == $relation_key) {
+                    // dynamic table
+                    // $final_column[$search_key] = $relation_value.$dynamic_table;
+
+                    // static table
                     $final_column[$search_key] = $relation_value;
                 }
             }
         }
 
-        $final_column = implode(',', $final_column) . '.' . $column;
-        // dd($final_column);
-        return $final_column;
+        return $final_column = implode(',', $final_column) . '.' . $column;
         // $reduce = array_pop($chunkColumn);
     }
 
     public function scopeSortFilter($query)
     {
+        // belum selesai, rencananya dipakai untuk sortBy
+        $relation = $this->relation_name;
+
         $search_column = explode('.', request()->sortBy);
+        $final_column = [];
 
-        if(count($search_column) <= 1) {
-            return $query->orderBy(array_pop($search_column), request()->direction);
-        } else {
-            // kolom sort tidak tersedia di table
-            return $query;
+        // $dynamic_table = strval("_".request()->year."_".request()->month);
+        
+        // dd($this->table_session, 11);
+
+        foreach ($search_column as $search_key => $search_value) {
+            foreach ($relation as $relation_key => $relation_value) {
+                // dd($search_value, $relation_key);
+                if(count($search_column) > 1) {
+                    if ($search_value == $relation_key) {
+                        // dynamic table
+                        // $final_column[$search_key] = $relation_value.$dynamic_table;
+
+                        switch ($search_value) {
+                            case 'one_mutation_inspection_information':
+                            case 'many_mutation_inspection':
+                                $final_column[$search_key] = $relation_value."_{$this->table_suffix}";
+                                break;
+                            
+                            default:
+                                $final_column[$search_key] = $relation_value;
+                                break;
+                        }
+                    }
+                } else {
+                    switch ($search_value) {
+                        case 'one_mutation_inspection_information':
+                        case 'many_mutation_inspection':
+                            $final_column[$search_key] = $relation_value."_{$this->table_suffix}";
+                            break;
+                        
+                        default:
+                            $final_column[$search_key] = $relation_value;
+                            break;
+                    }
+                }
+            }
         }
-
+        // $final_column = implode(',', $final_column) . '.' . request()->direction;
+dd($final_column);
+        $query->orderBy(implode(',', $final_column), request()->direction);
+        // return $final_column = implode(',', $final_column) . '.' . $column;
+        // $reduce = array_pop($chunkColumn);
     }
 
     protected function buildQuery($column, $operator, $request, $query)
@@ -169,42 +212,27 @@ trait FilterPaginateAdvanceUtility
             case 'greater_than':
             case 'less_than_or_equal_to':
             case 'greater_than_or_equal_to':
-                $query->where(
-                    $this->queryColumnFilter($column, $request->search_column, $relation), 
-                    $this->operators[$operator], $request->search_query_1
-                )
-                ->orderBy($this->queryColumnFilter($column, $request->sortBy, $relation), $request->direction);
+                $query->where($this->queryColumnFilter($column, $request->search_column, $relation), $this->operators[$operator], $request->search_query_1)
+                    ->orderBy($this->queryColumnFilter($column, $request->sortBy, $relation), $request->direction);
                 break;
             case 'in':
-                $query->whereIn(
-                    $this->queryColumnFilter($column, $request->search_column, $relation),
-                    queryArrayErrorHandler($request->search_query_1)
-                )
-                ->orderBy($this->queryColumnFilter($column, $request->sortBy, $relation), $request->direction);
+                $query->whereIn($this->queryColumnFilter($column, $request->search_column, $relation), queryArrayErrorHandler($request->search_query_1))
+                    ->orderBy($this->queryColumnFilter($column, $request->sortBy, $relation), $request->direction);
                 break;
             case 'not_in':
-                $query->whereNotIn(
-                    $this->queryColumnFilter($column, $request->search_column, $relation),
-                    queryArrayErrorHandler($request->search_query_1)
-                )
-                ->orderBy($this->queryColumnFilter($column, $request->sortBy, $relation), $request->direction);
+                $query->whereNotIn($this->queryColumnFilter($column, $request->search_column, $relation), queryArrayErrorHandler($request->search_query_1))
+                    ->orderBy($this->queryColumnFilter($column, $request->sortBy, $relation), $request->direction);
                 break;
             case 'like':
-                $query->where(
-                    $this->queryColumnFilter($column, $request->search_column, $relation), 
-                    'like', '%' . $request->search_query_1 . '%'
-                )
-                ->orderBy($this->queryColumnFilter($column, $request->sortBy, $relation), $request->direction);
+                $query->where($this->queryColumnFilter($column, $request->search_column, $relation), 'like', '%' . $request->search_query_1 . '%')
+                    ->orderBy($this->queryColumnFilter($column, $request->sortBy, $relation), $request->direction);
                 break;
             case 'between':
-                $query->whereBetween(
-                    $this->queryColumnFilter($column, $request->search_column, $relation), 
-                    [
-                        $request->search_query_1,
-                        $request->search_query_2
-                    ]
-                )
-                ->orderBy($this->queryColumnFilter($column, $request->sortBy, $relation), $request->direction);
+                $query->whereBetween($this->queryColumnFilter($column, $request->search_column, $relation), [
+                    $request->search_query_1,
+                    $request->search_query_2
+                ])
+                    ->orderBy($this->queryColumnFilter($column, $request->sortBy, $relation), $request->direction);
                 break;
             default:
                 throw new Exception('Invalid Search Operator', 1);

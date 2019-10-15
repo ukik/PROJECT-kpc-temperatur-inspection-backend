@@ -26,7 +26,7 @@ trait FilterPaginateUtility
 
         $filter = $this->filter;
 
-        $column             = $request->column;
+        // $column             = $request->column;
         $direction          = $request->direction;
         $per_page           = $request->per_page;
         $page               = $request->page;
@@ -40,7 +40,7 @@ trait FilterPaginateUtility
         }
 
         $params = [
-            "column"            => $column,
+            // "column"            => $column,
             "direction"         => $direction,
             "per_page"          => $per_page,
             "page"              => $page,
@@ -51,7 +51,7 @@ trait FilterPaginateUtility
         ];
 
         $v = Validator::make($params, [
-            'column'            => 'required|in:' . implode(',', $filter),
+            // 'column'            => 'required|in:' . implode(',', $filter),
             'direction'         => 'required|in:asc,desc',
             'per_page'          => 'required|integer|min:1',
             'search_operator'   => 'required|in:' . implode(',', array_keys($this->operators)),

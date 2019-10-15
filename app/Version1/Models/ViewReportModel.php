@@ -5,14 +5,70 @@ use Illuminate\Database\Eloquent\Model;
 class ViewReportModel extends Model
 {
   // use \FilterPaginateUtility;
-  use \FilterPaginateAdvanceUtility;
+  use \FilterPaginateReportUtility;
   use \ViewReportFilter;
+  // use \ViewReportCast;
+  use \ViewReportSchema;
+
+  public function __construct($attributes = [])
+  {
+      parent::__construct($attributes);
+
+      // $this->table = 'tb_mutation_inspection';
+      date_default_timezone_set('Asia/Makassar');
+
+      $year = request()->year;
+      $month = request()->month;
+
+      if(!$year && !$month) {
+
+          $year = date('Y');
+          $month = date('m');
+
+          if (!ifTableExist("vw_report_{$year}_{$month}")) {
+              // fresh create berdasarkan current Date
+              if($year <= date('Y') && $month <= date('m')){
+                $this->createDynamicView("tb_mutation_inspection_{$year}_{$month}", "vw_report_{$year}_{$month}");
+              }
+          } 
+          
+          $this->table = "vw_report_{$year}_{$month}";
+          return;
+      }
+
+      $month_validation = "01,02,03,04,05,06,07,08,09,10,11,12";
+
+      $validator = \Validator::make([
+          'year'      => $year,
+          'month'     => $month,
+      ], [
+          "year"    => 'required|numeric|digits_between:4,4', 
+          "month"   => 'required|digits_between:2,2|in:'.$month_validation, 
+      ]);
+
+      if ($validator->fails()) {
+          dd($validator->messages());
+      }    
+
+      if (!ifTableExist("vw_report_{$year}_{$month}")) {
+        // batas terakhir adalah current Date
+        if($year <= date('Y') && $month <= date('m')){
+          $this->createDynamicView("tb_mutation_inspection_{$year}_{$month}", "vw_report_{$year}_{$month}");
+        }            
+      } 
+
+      $this->table = "vw_report_{$year}_{$month}";
+      return;
+  }
+
 
   public $incrementing = false;
 
   protected $primaryKey = 'uuid';
 
-  protected $table = "vw_report";
+  protected $casts = [
+    'place_inspection'  => 'string'
+  ];
 
   protected $guarded = [
     'week',
@@ -50,10 +106,10 @@ class ViewReportModel extends Model
   public function belong_employees()
   {
     return $this->belongsToMany(
-      \TableEmployeeModel::class,      // target class 
-      'tb_mutation_inspection',   // pivot table
-      'uuid',                     // target primary key
-      'uuid_tb_employee'          // pivot foreign key
+      \TableEmployeeModel::class,     // target class 
+      'tb_mutation_inspection',       // pivot table
+      'uuid',                         // target primary key
+      'uuid_tb_employee'              // pivot foreign key
     );
   }
 

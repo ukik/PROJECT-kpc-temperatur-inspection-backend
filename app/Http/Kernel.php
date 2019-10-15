@@ -64,6 +64,7 @@ class Kernel extends HttpKernel
 
         // 'jwt.recycle' => \JWTRecycleToken::class,
         // 'signiture' => \SignitureDecryption::class,        
-        'jwt.recycle' => \JWTMiddleware::class,         
+        'jwt.recycle' => \JWTMiddleware::class,   
+        'mutation'  => \MutationMiddleware::class,      
     ];
 }

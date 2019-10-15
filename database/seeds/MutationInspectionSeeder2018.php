@@ -2,9 +2,9 @@
 
 use Illuminate\Database\Seeder;
 
-# php artisan db:seed --class=MutationInspectionSeeder
+# php artisan db:seed --class=MutationInspectionSeeder2018
 
-class MutationInspectionSeeder extends Seeder
+class MutationInspectionSeeder2018 extends Seeder
 {
     use \EquipmentLocationStatic;
     use \TableMutationInspectionSchema;
@@ -36,8 +36,8 @@ class MutationInspectionSeeder extends Seeder
 
         // $no = 0;
 
-        $myinterval = 365;
-        $mydate = "2017-12-31 00:00:00";
+        $myinterval = 69;
+        $mydate = "2018-10-23 00:00:00";
 
         $startDate = new Carbon\Carbon($mydate); //date("Y-m-d 00:00:00");
         // $stop_date = '2017-12-31 20:24:00';

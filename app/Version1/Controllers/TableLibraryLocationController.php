@@ -7,10 +7,12 @@ use Illuminate\Http\Request;
 class TableLibraryLocationController extends Controller
 {
     use \TableLibraryLocationValidator;
+    use \TableLibraryLocationSchema;
 
     public function index(Request $request)
     {
-        $data = null;
+
+        // $data = null;
         switch (request()->type) {
             case "select":
                 $data = \TableLibraryLocationModel::orderBy('no', 'asc')
@@ -18,12 +20,8 @@ class TableLibraryLocationController extends Controller
                     ->get();
                 break;
             default:
-                try {
-                    $data = \TableLibraryLocationModel::orderBy(request()->sortBy, request()->direction)
-                        ->filterPaginate();
-                } catch (\Throwable $th) {
-                    //throw $th;
-                }
+                $data = \TableLibraryLocationModel::orderBy(request()->sortBy, request()->direction)
+                    ->filterPaginate();
                 break;
         }
 
@@ -32,12 +30,6 @@ class TableLibraryLocationController extends Controller
 
     public function store(Request $request)
     {
-        $form =  [
-            'uuid'              => 'TLE-' . uuid(),
-            'label_location'    => request()->label_location,
-            'name_location'     => request()->name_location,
-        ];
-
         $this->librarLocationValidator($form);
 
         $data = \TableLibraryLocationModel::create($form)->filterPaginate();

@@ -7,23 +7,20 @@ use Illuminate\Http\Request;
 class TableLibraryEquipmentController extends Controller
 {
     use \TableLibraryEquipmentValidator;
+    use \TableLibraryEquipmentSchema;
 
     public function index(Request $request)
     {
-        $data = null;
+        // $data = null;
         switch (request()->type) {
             case "select":
                 $data = \TableLibraryEquipmentModel::orderBy('no', 'asc')
-                    ->select(['uuid', 'name_equipment'])
+                    ->select(['uuid', 'name_equipment', 'label_equipment'])
                     ->get();
                 break;
             default:
-                try {
-                    $data = \TableLibraryEquipmentModel::orderBy(request()->sortBy, request()->direction)
-                        ->filterPaginate();
-                } catch (\Throwable $th) {
-                    //throw $th;
-                }
+                $data = \TableLibraryEquipmentModel::orderBy(request()->sortBy, request()->direction)
+                    ->filterPaginate();
                 break;
         }
 
@@ -32,12 +29,6 @@ class TableLibraryEquipmentController extends Controller
 
     public function store(Request $request)
     {
-        $form =  [
-            'uuid'              => 'TLE-' . uuid(),
-            'label_equipment'   => request()->label_equipment,
-            'name_equipment'    => request()->name_equipment,
-        ];
-
         $this->libraryEquipmentValidator($form);
 
         $data = \TableLibraryEquipmentModel::create($form)->filterPaginate();

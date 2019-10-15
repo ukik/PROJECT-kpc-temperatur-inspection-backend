@@ -7,7 +7,7 @@ if (!function_exists('Resolver')) {
             ->json([
                 'payload'    => $payload, 
                 'role'       => AuthCheck() ? Auth::user()->position_employee : null, 
-                'token'      => tokenCheck($request) ? JWTRefresh() : null, 
+                // 'token'      => tokenCheck($request) ? JWTRefresh() : null, 
                 'auth'       => $auth,
             ])        
             ->header('Content-Type', 'application/json')
@@ -16,13 +16,13 @@ if (!function_exists('Resolver')) {
     }
 }
 
-if (!function_exists('Fallback')) {
-    function Fallback($payload = null, $status = null)
-    {
-        return response()
-            ->json($payload)        
-            ->header('Content-Type', 'application/json')
-            // ->header('Content-Type', 'application/x-www-form-urlencoded')
-            ->setStatusCode($status);
-    }
-}
+// if (!function_exists('Fallback')) {
+//     function Fallback($payload = null, $status = 400)
+//     {
+//         return response()
+//             ->json($payload)        
+//             ->header('Content-Type', 'application/json')
+//             // ->header('Content-Type', 'application/x-www-form-urlencoded')
+//             ->setStatusCode($status);
+//     }
+// }

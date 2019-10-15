@@ -28,12 +28,14 @@
             "database/factories",
             "app/Version1/Controllers",
             "app/Version1/Models",
+            "app/Version1/Attributes",
+            "app/Version1/Schemas",
             "app/Version1/Filters",
             "app/Version1/Utilities",
             "app/Version1/Validators",
             "app/Version1/Middlewares",
             "app/Version1/Observers",
-            "app/Version1/Static"
+            "app/Version1/Statics"
         ],
         "files": [
             "app/Version1/Helpers/Cache.php",

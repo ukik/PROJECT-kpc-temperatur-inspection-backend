@@ -4,15 +4,29 @@ use Illuminate\Database\Eloquent\Model;
 
 class TableLibraryLocationModel extends Model
 {
-    use \FilterPaginateUtility;
+    use \FilterPaginateAdvanceUtility;
     use \TableLibraryLocationFilter;
+    use \TableLibraryLocationAttribute;
+
+    public function __construct($attributes = [])
+    {
+        parent::__construct($attributes);
+
+        $this->table = 'tb_library_location';
+
+        switch (request()->type) {
+            case "select":
+                $this->append([
+                    'place',
+                ]);
+                break;
+        }
+    }
 
     public $incrementing = false;
 
     protected $primaryKey = 'uuid';
     protected $foreignKey = 'label_location';
-
-    protected $table = "tb_library_location";
 
     protected $fillable = [
         'name_location',

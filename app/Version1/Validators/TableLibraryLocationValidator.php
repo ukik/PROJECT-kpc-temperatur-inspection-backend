@@ -2,8 +2,14 @@
 
 trait TableLibraryLocationValidator
 {
-    public function libraryLocationValidator($form)
+    public function libraryLocationValidator()
     {
+        $form =  [
+            'uuid'              => 'TLE-' . uuid(),
+            'label_location'    => request()->label_location,
+            'name_location'     => request()->name_location,
+        ];
+
         $validator = \Validator::make($form, [
             'uuid'              => 'required|string|digits:40|unique:tb_library_location',
             'label_location'    => 'required|string|digits:3|unique:tb_library_location',
@@ -11,10 +17,7 @@ trait TableLibraryLocationValidator
         ]);
 
         if ($validator->fails()) {
-            resolver([
-                'fails'     => true,
-                'messages'  => $validator->messages(),
-            ]);
+            dd($validator->messages());
         }
     }
 }

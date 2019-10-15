@@ -6,76 +6,119 @@ use Illuminate\Database\Seeder;
 
 class MutationInspectionInformationSeeder extends Seeder
 {
+    use \ViewReportSchema;
+    use \TableMutationInspectionInformationSchema;
 
     public
     function run()
     {
         DB::statement('SET FOREIGN_KEY_CHECKS=0;');
-        DB::table('tb_mutation_inspection_information')->truncate();
+        // DB::table('tb_mutation_inspection_information')->truncate();
         DB::statement('SET FOREIGN_KEY_CHECKS=1;');
 
         $faker = Faker\Factory::create();
 
+        $myinterval = 12;
+        $mydate = "2017-12-31 00:00:00";
 
-        $mutation_inspections = DB::table('tb_mutation_inspection')->get();
+        $startDate = new Carbon\Carbon($mydate); //date("Y-m-d 00:00:00");
 
-        foreach ($mutation_inspections as $key => $mutation) {
-            # code...
-            $generated = null;
+        for ($i = 1; $i <= $myinterval; $i++) { 
 
-            switch ($mutation->current_upnormal_inspection) {
-                case '1':
-                case 1:
+            $endDate = $startDate->addMonths(1);
+            $year = $endDate->format('Y');
+            $month = $endDate->format('m');
 
-                    $generated = [
-                        "uuid"                                  => "TIF-" . $faker->uuid,
-                        'uuid_tb_inspection'                    => $mutation_inspections[mt_rand(0, count($mutation_inspections) - 1)]->uuid,
-                        'label_inspection_information'          => 'cui',
-                        'description_inspection_information'    => $faker->text,
-                        'created_at'                            => $mutation->created_at,
-                    ];
+            var_dump($year, $month);
 
-                    var_dump($generated);
-
-                    DB::table('tb_mutation_inspection_information')->insert($generated);
-
-                    # code...
-                    break;
+            # make dynamic vw_report_{year}_{month}
+            try {
+                if (!ifTableExist("vw_report_{$year}_{$month}") && !ifTableExist("tb_mutation_inspection_{$year}_{$month}")) {
+                    $this->createDynamicView("tb_mutation_inspection_{$year}_{$month}", "vw_report_{$year}_{$month}");
+                }                
+            } catch (\Throwable $th) {
+                //throw $th;
             }
 
-            switch ($mutation->last_upnormal_inspection) {
-                case '1':
-                case 1:
+            // dd(\DB::statement("SHOW TABLES LIKE 'vw_report_{$year}_{$month}'"), ifTableExist("tb_mutation_inspection_{$year}_{$month}"));
 
-                    $generated = [
-                        "uuid"                                  => "TIF-" . $faker->uuid,
-                        'uuid_tb_inspection'                    => $mutation_inspections[mt_rand(0, count($mutation_inspections) - 1)]->uuid,
-                        'label_inspection_information'          => 'lui',
-                        'description_inspection_information'    => $faker->text,
-                        'created_at'                            => $mutation->created_at,
-                    ];
+            # load dynamic vw_report_{year}_{month}
+            // try {
+                if (\DB::statement("SHOW TABLES LIKE 'vw_report_{$year}_{$month}'")) {
 
-                    var_dump($generated);
+                     if (!ifTableExist("tb_mutation_inspection_information_{$year}_{$month}")) {
+                        $this->createDynamicTable("tb_mutation_inspection_information_{$year}_{$month}");
+                    }
 
-                    DB::table('tb_mutation_inspection_information')->insert($generated);
+                    if (ifTableExist("tb_mutation_inspection_information_{$year}_{$month}")) {
 
-                    # code...
-                    break;
-            }
+                        $mutation_inspections = DB::table("vw_report_{$year}_{$month}")->get();
 
-            if(mt_rand(0,1) == 1) {
-                $generated = [
-                    "uuid"                                  => "TIF-" . $faker->uuid,
-                    'uuid_tb_inspection'                    => $mutation_inspections[mt_rand(0, count($mutation_inspections) - 1)]->uuid,
-                    'label_inspection_information'          => 'com',
-                    'description_inspection_information'    => $faker->text,
-                    'created_at'                            => $mutation->created_at,
-                ];
 
-                var_dump($generated);
+                        foreach ($mutation_inspections as $key => $mutation) {
+                            # code...
+                            $generated = null;
 
-                DB::table('tb_mutation_inspection_information')->insert($generated);                
-            }
+                            switch ($mutation->current_upnormal_inspection) {
+                                case '1':
+                                case 1:
+
+                                    $generated = [
+                                        "uuid"                                  => "TIF-" . $faker->uuid,
+                                        'uuid_tb_inspection'                    => $mutation_inspections[mt_rand(0, count($mutation_inspections) - 1)]->uuid,
+                                        'label_inspection_information'          => 'cui',
+                                        'description_inspection_information'    => $faker->text,
+                                        'created_at'                            => $mutation->created_at,
+                                    ];
+
+                                    var_dump($generated);
+
+                                    DB::table("tb_mutation_inspection_information_{$year}_{$month}")->insert($generated);
+
+                                    # code...
+                                    break;
+                            }
+
+                            switch ($mutation->last_upnormal_inspection) {
+                                case '1':
+                                case 1:
+
+                                    $generated = [
+                                        "uuid"                                  => "TIF-" . $faker->uuid,
+                                        'uuid_tb_inspection'                    => $mutation_inspections[mt_rand(0, count($mutation_inspections) - 1)]->uuid,
+                                        'label_inspection_information'          => 'lui',
+                                        'description_inspection_information'    => $faker->text,
+                                        'created_at'                            => $mutation->created_at,
+                                    ];
+
+                                    var_dump($generated);
+
+                                    DB::table("tb_mutation_inspection_information_{$year}_{$month}")->insert($generated);
+
+                                    # code...
+                                    break;
+                            }
+
+                            if (mt_rand(0, 1) == 1) {
+                                $generated = [
+                                    "uuid"                                  => "TIF-" . $faker->uuid,
+                                    'uuid_tb_inspection'                    => $mutation_inspections[mt_rand(0, count($mutation_inspections) - 1)]->uuid,
+                                    'label_inspection_information'          => 'com',
+                                    'description_inspection_information'    => $faker->text,
+                                    'created_at'                            => $mutation->created_at,
+                                ];
+
+                                var_dump($generated);
+
+                                DB::table("tb_mutation_inspection_information_{$year}_{$month}")->insert($generated);
+                            }
+                        }
+
+                    }
+                }
+            // } catch (\Throwable $th) {
+            //     //throw $th;
+            // }                    
         }
     }
 }

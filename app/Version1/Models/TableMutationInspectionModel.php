@@ -7,12 +7,74 @@ class TableMutationInspectionModel extends Model
   // use \FilterPaginateUtility;
   use \FilterPaginateAdvanceUtility;
   use \TableMutationInspectionFilter;
+  use \TableMutationInspectionSchema;
+
+  public $table_session = "";
+  public $table_suffix = "";
+
+  // protected $table = 'tb_mutation_inspection';
+  public function __construct($attributes = [])
+  {
+      parent::__construct($attributes);
+
+      // $this->table = 'tb_mutation_inspection';
+      date_default_timezone_set('Asia/Makassar');
+
+      $year = request()->year;
+      $month = request()->month;
+
+      if(!$year && !$month) {
+
+        $year = date('Y');
+        $month = date('m');
+
+        if (!ifTableExist("tb_mutation_inspection_{$year}_{$month}")) {
+          // fresh create berdasarkan current Date
+          if($year <= date('Y') && $month <= date('m')){
+            $this->createDynamicTable("tb_mutation_inspection_{$year}_{$month}");
+          }
+        } 
+        
+        $this->table = "tb_mutation_inspection_{$year}_{$month}";
+
+        $this->table_session = "tb_mutation_inspection_{$year}_{$month}";
+        $this->table_suffix = "{$year}_{$month}";
+
+        return;
+      }
+
+      $month_validation = "01,02,03,04,05,06,07,08,09,10,11,12";
+
+      $validator = \Validator::make([
+        'year'      => $year,
+        'month'     => $month,
+      ], [
+          "year"    => 'required|numeric|digits_between:4,4', 
+          "month"   => 'required|digits_between:2,2|in:'.$month_validation, 
+      ]);
+
+      if ($validator->fails()) {
+          dd($validator->messages());
+      }    
+
+      if (!ifTableExist("tb_mutation_inspection_{$year}_{$month}")) {
+        // batas terakhir adalah current Date
+        if($year <= date('Y') && $month <= date('m')){
+          $this->createDynamicTable("tb_mutation_inspection_{$year}_{$month}");
+        }
+      } 
+      
+      $this->table = "tb_mutation_inspection_{$year}_{$month}";
+
+      $this->table_session = "tb_mutation_inspection_{$year}_{$month}";
+      $this->table_suffix = "{$year}_{$month}";
+
+      return;
+  }
 
   public $incrementing = false;
 
   protected $primaryKey = 'uuid';
-
-  protected $table = "tb_mutation_inspection";
 
   protected $fillable = [
     'no',
@@ -45,10 +107,10 @@ class TableMutationInspectionModel extends Model
   public function belong_employees()
   {
     return $this->belongsToMany(
-      \TableEmployeeModel::class,      // target class 
-      'tb_mutation_inspection',   // pivot table
-      'uuid',                     // target primary key
-      'uuid_tb_employee'          // pivot foreign key
+      \TableEmployeeModel::class,     // target class 
+      'tb_mutation_inspection',       // pivot table
+      'uuid',                         // target primary key
+      'uuid_tb_employee'              // pivot foreign key
     );
   }
 
@@ -77,4 +139,5 @@ class TableMutationInspectionModel extends Model
   {
     return $this->hasMany(\TableMutationInspectionModel::class, 'uuid_tb_inspection');
   }
+
 }

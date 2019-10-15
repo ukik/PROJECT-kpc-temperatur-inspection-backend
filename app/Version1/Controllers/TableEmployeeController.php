@@ -9,6 +9,7 @@ use Auth;
 class TableEmployeeController extends Controller
 {
     use \TableEmployeeValidator;
+    use \TableEmployeeSchema;
 
     public function index(Request $request)
     {
@@ -41,22 +42,6 @@ class TableEmployeeController extends Controller
 
     public function update(Request $request)
     {
-        $form =  [
-            'uuid'                      => request()->uuid,
-            'name_employee'             => request()->name_employee,
-            'position_employee'         => request()->position_employee,
-            'nik_employee'              => request()->nik_employee,
-            'telpon_employee'           => request()->telpon_employee,
-            'email_employee'            => request()->email_employee,
-            'birth_place_employee'      => request()->birth_place_employee,
-            'birth_date_employee'       => request()->birth_date_employee,
-            'gender_employee'           => request()->gender_employee,
-            'marital_employee'          => request()->marital_employee,
-            'address_employee'          => request()->address_employee,
-            'password_employee'         => request()->password_employee,
-            'photo_employee'            => request()->photo_employee,
-        ];
-
         $this->employeeValidator($form);
 
         $data = \TableEmployeeModel::findOrFail(request()->uuid)->update($form)->filterPaginate();
