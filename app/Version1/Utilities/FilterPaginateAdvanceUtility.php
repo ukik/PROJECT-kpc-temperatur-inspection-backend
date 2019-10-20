@@ -39,8 +39,8 @@ trait FilterPaginateAdvanceUtility
         $search_query_1     = $request->search_query_1 ? $request->search_query_1 : "";
         $search_query_2     = $request->search_query_2 ? $request->search_query_2 : "";
 
-        $year               = $request->year;
-        $month              = $request->month;        
+        // $year               = $request->year;
+        // $month              = $request->month;        
 
         if (empty($search_query_1)) {
             $search_operator = 'not_in';
@@ -56,8 +56,8 @@ trait FilterPaginateAdvanceUtility
             "search_query_1"    => $search_query_1,
             "search_query_2"    => $search_query_2,
 
-            "year"              => $year, 
-            "month"             => $month,
+            // "year"              => $year, 
+            // "month"             => $month,
         ];
 
         $month_validation = "01,02,03,04,05,06,07,08,09,10,11,12";
@@ -71,19 +71,19 @@ trait FilterPaginateAdvanceUtility
             'search_query_1'    => 'max:255',
             'search_query_2'    => 'max:255',
 
-            "year"              => 'required|numeric|digits_between:4,4', 
-            "month"             => 'required|digits_between:2,2|in:'.$month_validation,             
+            // "year"              => 'required|numeric|digits_between:4,4', 
+            // "month"             => 'required|digits_between:2,2|in:'.$month_validation,             
         ]);
 
         if ($v->fails()) {
             dd($v->messages());
         }
 
-        $prefix_table = $prefix == null ? $this->table : strval($prefix."{$year}_{$month}");
+        // $prefix_table = $prefix == null ? $this->table : strval($prefix."{$year}_{$month}");
 
         return $query
             // ->orderBy($request->sortBy, $request->direction)
-            ->from($prefix_table)
+            ->from($this->table)
             ->where(function ($query) use ($request, $params) {
                 // check if search query is empty
                 if ($request->has('search_query_1')) {

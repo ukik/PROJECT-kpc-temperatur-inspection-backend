@@ -20,7 +20,8 @@ class TableLibraryLocationController extends Controller
                     ->get();
                 break;
             default:
-                $data = \TableLibraryLocationModel::orderBy(request()->sortBy, request()->direction)
+                $direction = request()->direction == null ? 'desc' : request()->direction;
+                $data = \TableLibraryLocationModel::orderBy(request()->sortBy, $direction)
                     ->filterPaginate();
                 break;
         }

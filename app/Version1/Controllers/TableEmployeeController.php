@@ -27,8 +27,19 @@ class TableEmployeeController extends Controller
         // return $data = \MutationInspectionModel::first()->library_equipment;
         // return $data = \EmployeeModel::first()->trough_library_equipment;
         // return $data = \EmployeeModel::filterPaginate();
-
-        $data = \TableEmployeeModel::orderBy(request()->sortBy, request()->direction)->filterPaginate();
+        // $data = null;
+        switch (request()->type) {
+            case "select":
+                $data = \TableEmployeeModel::orderBy('no', 'asc')
+                    ->select(['uuid', 'name_employee'])
+                    ->get();
+                break;
+            default:
+                $direction = request()->direction == null ? 'desc' : request()->direction;
+                $data = \TableEmployeeModel::orderBy(request()->sortBy, $direction)
+                    ->filterPaginate();
+                break;
+        }
 
         return resolver($request = $request, $payload = $data, $auth = true);
     }
