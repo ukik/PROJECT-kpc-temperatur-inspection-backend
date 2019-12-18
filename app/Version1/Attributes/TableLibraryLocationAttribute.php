@@ -14,6 +14,8 @@ trait TableLibraryLocationAttribute
         $data = null;
         foreach ($this->equipment as $key1 => $location) {
             # code...
+			
+			// getter('label_equipment') from TableLibraryEquipmentAttribute.php
             if ($key1 == getter('label_equipment')) {
                 foreach ($location as $key2 => $value) {
                     # code...

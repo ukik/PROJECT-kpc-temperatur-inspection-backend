@@ -4,26 +4,66 @@ namespace App;
 
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Tymon\JWTAuth\Contracts\JWTSubject;
 
-class User extends Authenticatable
+class User extends Authenticatable implements JWTSubject
 {
     use Notifiable;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array
-     */
+	use \UserSchema;
+	use \TableEmployeeSchema;
+
+    protected $table = "user";
+    public $incrementing = false;
+    protected $primaryKey = 'uuid';
+	
+    public function __construct($attributes = [])
+    {
+        parent::__construct($attributes);
+		
+		  // origin
+		  if (!ifTableExist("tb_employee")) {
+			$this->createStaticTableEmployeeSchema("tb_employee");
+		  }
+
+		  // mirror
+		  if (!ifViewExist("user")) {
+			$this->createStaticViewUserSchema("user");
+		  }
+
+		  $this->table = "user";				
+    }
+
     protected $fillable = [
-        'name', 'email', 'password',
+		'no',
+		'uuid',
+		'name',
+		'position',
+		'nik',
+		'telpon',
+		'email',
+		'birth_place',
+		'birth_date',
+		'gender',
+		'marital',
+		'address',
+		'password',
+		'plain_password',
+		'photo',
+		'verification',
+		'token',
+		'disable',
+		'created_at',
+		'updated_at',
     ];
 
-    /**
-     * The attributes that should be hidden for arrays.
-     *
-     * @var array
-     */
-    protected $hidden = [
-        'password', 'remember_token',
-    ];
+    public function getJWTIdentifier()
+    {
+        return $this->getKey();
+    }
+
+    public function getJWTCustomClaims()
+    {
+        return [];
+    }
 }

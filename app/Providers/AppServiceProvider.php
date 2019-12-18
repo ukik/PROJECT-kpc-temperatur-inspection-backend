@@ -5,11 +5,6 @@ namespace App\Providers;
 use Illuminate\Support\ServiceProvider;
 use Intervention\Image\ImageManagerStatic;
 
-use TableEmployeeModel;
-use TableLibraryEquipmentModel;
-use TableLibraryLocationModel;
-use TableMutationInspectionInformationModel;
-use TableMutationInspectionModel;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -30,11 +25,12 @@ class AppServiceProvider extends ServiceProvider
             }
         });
 
-        TableEmployeeModel::observe(\TableEmployeeObserver::class);
-        TableLibraryEquipmentModel::observe(\TableLibraryLocationObserver::class);
-        TableLibraryLocationModel::observe(\TableLibraryEquipmentObserver::class);
-        TableMutationInspectionModel::observe(\TableMutationInspectionObserver::class);
-        TableMutationInspectionInformationModel::observe(\TableMutationInspectionInformationObserver::class);
+        \TableEmployeeModel::observe(\TableEmployeeObserver::class);
+        \TableLibraryEquipmentModel::observe(\TableLibraryLocationObserver::class);
+        \TableLibraryLocationModel::observe(\TableLibraryEquipmentObserver::class);
+        \TableLibraryScheduleModel::observe(\TableLibraryScheduleObserver::class);
+        \TableMutationInspectionModel::observe(\TableMutationInspectionObserver::class);
+        \NotificationModel::observe(\NotificationObserver::class);
     }
 
     /**

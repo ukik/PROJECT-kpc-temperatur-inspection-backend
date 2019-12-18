@@ -6,60 +6,64 @@ use Illuminate\Http\Request;
 
 class TableMutationInspectionController extends Controller
 {
-    use \TableMutationInspectionValidator;
-    use \TableMutationInspectionSchema;
-
     public function index(Request $request)
     {
-        // validate params + create session table name
-        // paramMonthYearValidator($request);
+		$validation = request()->validation == "valid" ? 'true' : 'false';		
+		// TM = temperature man
+		if(user()->position == 2){
+			
+			$data = \ViewMutationInspectionModel::where('uuid_tb_employee', user()->uuid)->where('valid_inspection', $validation)->groupBy('uuid')->filterPaginate();
+			
+		} else {
+			
+			$data = \ViewMutationInspectionModel::where('valid_inspection', $validation)->groupBy('uuid')->filterPaginate();
+		}
 
-        $data = \TableMutationInspectionModel::with([
-            'belong_employee' => function ($query) {
-                return $query->select(['uuid', 'name_employee']);
-            },
-            'belong_library_location' => function ($query) {
-                return $query->select(['uuid', 'name_location']);
-            },
-            'belong_library_equipment' => function ($query) {
-                return $query->select(['uuid', 'name_equipment']);
-            },
-        ])
-        ->sortFilter()
-        ->filterPaginate();
-
-        return resolver(
-            $request = $request, 
-            $payload = $data, 
-            $auth = true
-        );
+        return Resolver([
+            'payload'    => $data,
+            'credentials' => [
+                'role'       => role(),
+                // 'token'      => JWTToken(),
+                'logged'     => logged(),
+            ]
+        ]);
     }
 
     public function store(Request $request)
     {
-        $this->mutationInspectionValidator($form);
-
-        $data = \TableMutationInspectionModel::create($form)->filterPaginate();
-
-        return resolver($request = $request, $payload = $data, $auth = true);
-    }
-
-    public function show(Request $request, $uuid)
-    {
-        $data = \TableMutationInspectionModel::findOrFail($uuid)->first();
-
-        return resolver($request = $request, $payload = $data, $auth = true);
-    }
-
-    public function update(Request $request)
-    {
+		// batas maksimal tahun
+		if(date('Y') < request()->year){
+            return Resolver([
+                'payload'   => ["batas maksimal tahun pengisian data ".date("Y")],
+                'status'    => "validation",
+                'credentials' => [
+                    'role'       => role(),
+                    'logged'     => logged(),
+                ]
+            ]);
+		}			
+		// batas minimal tahun
+		if((date('Y')-1) > request()->year){
+            return Resolver([
+                'payload'   => ["batas minimal tahun pengisian data ".(date("Y")-1)],
+                'status'    => "validation",
+                'credentials' => [
+                    'role'       => role(),
+                    'logged'     => logged(),
+                ]
+            ]);
+		}			
+		
         $form =  [
-            'uuid'                          => request()->uuid,
+            'uuid'                          => 'TIS-' . uuid(),
             'uuid_tb_employee'              => request()->uuid_tb_employee,
-            'uuid_tb_inspection'            => request()->uuid_tb_inspection,
-            'equipment_inspection'          => request()->equipment_inspection,
-            'location_inspection'           => request()->location_inspection,
-            'place_inspection'              => request()->place_inspection,
+            'uuid_tb_schedule'              => request()->uuid_tb_schedule,
+            'uuid_tb_equipment'             => request()->uuid_tb_equipment,
+            'uuid_tb_location'              => request()->uuid_tb_location,
+            
+			'place_inspection'              => request()->place_inspection,
+			//'valid_inspection'              => request()->valid_inspection,
+			
             'condition_inspection'          => request()->condition_inspection,
             'grease_shoot_inspection'       => request()->grease_shoot_inspection,
             'weather_inspection'            => request()->weather_inspection,
@@ -67,20 +71,225 @@ class TableMutationInspectionController extends Controller
             'rain_inspection'               => request()->rain_inspection,
             'current_upnormal_inspection'   => request()->current_upnormal_inspection,
             'last_upnormal_inspection'      => request()->last_upnormal_inspection,
-            'screenshoot_inspection'        => request()->screenshoot_inspection,
+            // 'screenshoot_inspection'        => request()->screenshoot_inspection,
         ];
 
-        $this->mutationInspectionValidator($form);
+        $validator = \Validator::make($form, [
+            'uuid'                          => 'required|string|max:40|min:40',
+            'uuid_tb_employee'              => 'required|string|max:40|min:40',
+            'uuid_tb_schedule'              => 'required|string|max:40|min:40',
+            'uuid_tb_location'              => 'required|string|max:40|min:40',
+			
+            //'place_inspection'          	=> 'required|in:Kiri,Kiri,A,B',
+            //'valid_inspection'          	=> 'required|in:true,false',
+			
+            'condition_inspection'          => 'required|in:1,2,3',
+            'grease_shoot_inspection'       => 'required|numeric|max:100',
+            'weather_inspection'            => 'required|in:1,2,3,4,5,6',
+            'temperature_inspection'        => 'required|numeric|max:100',
+            'rain_inspection'               => 'required|numeric|max:100',
+            'current_upnormal_inspection'   => 'required|in:0,1',
+            'last_upnormal_inspection'      => 'required|in:0,1',
+            // 'screenshoot_inspection'        => 'imageable',
+        ]);
 
-        $data = \TableMutationInspectionModel::findOrFail(request()->uuid)->update($form)->filterPaginate();
+        if ($validator->fails()) {
+            return Resolver([
+                'payload'   => $validator->messages(),
+                'status'    => "validation",
+                'credentials' => [
+                    'role'       => role(),
+                    // 'token'      => JWTToken(),
+                    'logged'     => logged(),
+                ]
+            ]);
+        }
+		
+		//$form['place_inspection']              = place_inspection(request()->place_inspection);
+		//$form['valid_inspection']              = valid_inspection(request()->valid_inspection);
 
-        return resolver($request = $request, $payload = $data, $auth = true);
+        $form['condition_inspection']          = strval(request()->condition_inspection);
+        $form['weather_inspection']            = strval(request()->weather_inspection);
+        $form['current_upnormal_inspection']   = strval(request()->current_upnormal_inspection);
+        $form['last_upnormal_inspection']      = strval(request()->last_upnormal_inspection);
+
+        $form['current_upnormal_description_inspection']   = strval(request()->current_upnormal_inspection) == "0" ? NULL : request()->current_upnormal_description_inspection;
+        $form['last_upnormal_description_inspection']      = strval(request()->last_upnormal_inspection) == "0" ? NULL : request()->last_upnormal_description_inspection;
+
+		$form['common_description_inspection'] = request()->common_description_inspection;
+
+        $data = \TableMutationInspectionModel::create($form);
+		
+		$data->notify(new \NewInspectionNotification($data));
+		
+        return Resolver([
+            'payload'    => $data,
+			'status'	=> $data->getTable(),
+            'credentials' => [
+                'role'       => role(),
+                // 'token'      => JWTToken(),
+                'logged'     => logged(),
+            ]
+        ]);
     }
 
-    public function destroy(Request $request, $uuid)
+    public function validation(Request $request)
     {
-        \TableMutationInspectionModel::findOrFail($uuid)->delete();
+		
+        $form =  [
+            'uuid' => request()->uuid,
+        ];
 
-        return resolver($request = $request, $auth = true);
+        $validator = \Validator::make($form, [
+            'uuid' => 'required|string|max:40|min:40',
+        ]);
+
+        if ($validator->fails()) {
+            return Resolver([
+                'payload'   => $validator->messages(),
+                'status'    => "validation",
+                'credentials' => [
+                    'role'       => role(),
+                    // 'token'      => JWTToken(),
+                    'logged'     => logged(),
+                ]
+            ]);
+        }
+
+        $data = \TableMutationInspectionModel::whereUuid(request()->uuid);
+		$update = $data->update(['valid_inspection' => "1"]);
+
+		\NotificationModel::where('item_id', request()->uuid)->delete();		
+
+        return Resolver([
+            'payload'    => $data->first(),
+            'credentials' => [
+                'role'       => role(),
+                // 'token'      => JWTToken(),
+                'logged'     => logged(),
+            ]
+        ]);
+    }
+
+
+    public function update(Request $request)
+    {
+
+		// batas maksimal tahun
+		if(date('Y') < request()->year){
+            return Resolver([
+                'payload'   => ["batas maksimal tahun pengisian data ".date("Y")],
+                'status'    => "validation",
+                'credentials' => [
+                    'role'       => role(),
+                    'logged'     => logged(),
+                ]
+            ]);
+		}			
+		// batas minimal tahun
+		if((date('Y')-1) > request()->year){
+            return Resolver([
+                'payload'   => ["batas minimal tahun pengisian data ".(date("Y")-1)],
+                'status'    => "validation",
+                'credentials' => [
+                    'role'       => role(),
+                    'logged'     => logged(),
+                ]
+            ]);
+		}			
+		
+        $form =  [
+            'uuid'                          => request()->uuid,
+            'uuid_tb_employee'              => request()->uuid_tb_employee,
+            'uuid_tb_schedule'              => request()->uuid_tb_schedule,
+            'uuid_tb_equipment'             => request()->uuid_tb_equipment,
+            'uuid_tb_location'              => request()->uuid_tb_location,
+
+			'place_inspection'              => request()->place_inspection,
+			//'valid_inspection'              => request()->valid_inspection,
+			
+            'condition_inspection'          => request()->condition_inspection,
+            'grease_shoot_inspection'       => request()->grease_shoot_inspection,
+            'weather_inspection'            => request()->weather_inspection,
+            'temperature_inspection'        => request()->temperature_inspection,
+            'rain_inspection'               => request()->rain_inspection,
+            'current_upnormal_inspection'   => request()->current_upnormal_inspection,
+            'last_upnormal_inspection'      => request()->last_upnormal_inspection,
+            // 'screenshoot_inspection'        => request()->screenshoot_inspection,
+        ];
+
+        $validator = \Validator::make($form, [
+            'uuid'                          => 'required|string|max:40|min:40',
+            'uuid_tb_employee'              => 'required|string|max:40|min:40',
+            'uuid_tb_schedule'              => 'required|string|max:40|min:40',
+            'uuid_tb_location'              => 'required|string|max:40|min:40',
+			
+            //'place_inspection'          	=> 'required|in:Kiri,Kiri,A,B',
+            //'valid_inspection'          	=> 'required|in:true,false',
+			
+            'condition_inspection'          => 'required|in:1,2,3',
+            'grease_shoot_inspection'       => 'required|numeric|max:100',
+            'weather_inspection'            => 'required|in:1,2,3,4,5,6',
+            'temperature_inspection'        => 'required|numeric|max:100',
+            'rain_inspection'               => 'required|numeric|max:100',
+            'current_upnormal_inspection'   => 'required|in:0,1',
+            'last_upnormal_inspection'      => 'required|in:0,1',
+            // 'screenshoot_inspection'        => 'imageable',
+        ]);
+
+        if ($validator->fails()) {
+            return Resolver([
+                'payload'   => $validator->messages(),
+                'status'    => "validation",
+                'credentials' => [
+                    'role'       => role(),
+                    // 'token'      => JWTToken(),
+                    'logged'     => logged(),
+                ]
+            ]);
+        }
+		
+		$form['place_inspection']              = place_inspection(request()->place_inspection);
+		//$form['valid_inspection']              = valid_inspection(request()->valid_inspection);
+		
+        $form['condition_inspection']          = strval(request()->condition_inspection);
+        $form['weather_inspection']            = strval(request()->weather_inspection);
+        $form['current_upnormal_inspection']   = strval(request()->current_upnormal_inspection);
+        $form['last_upnormal_inspection']      = strval(request()->last_upnormal_inspection);
+
+        $form['current_upnormal_description_inspection']   = strval(request()->current_upnormal_inspection) == "0" ? NULL : request()->current_upnormal_description_inspection;
+        $form['last_upnormal_description_inspection']      = strval(request()->last_upnormal_inspection) == "0" ? NULL : request()->last_upnormal_description_inspection;
+
+		$form['common_description_inspection'] = request()->common_description_inspection;
+		
+        $data = \TableMutationInspectionModel::whereUuid(request()->uuid);
+		$update = $data->update($form);
+		$data->first()->tb_mutation_inspection;
+
+        return Resolver([
+            'payload'    => $data->first(),
+			'status'	 => getter('table'),
+            'credentials' => [
+                'role'       => role(),
+                // 'token'      => JWTToken(),
+                'logged'     => logged(),
+            ]
+        ]);
+    }
+
+    public function destroy()
+    {
+        \TableMutationInspectionModel::whereUuid(request()->uuid)->delete();
+
+		\NotificationModel::where('item_id', request()->uuid)->delete();	
+
+        return Resolver([
+            'payload'    => null,
+            'credentials' => [
+                'role'       => role(),
+                // 'token'      => JWTToken(),
+                'logged'     => logged(),
+            ]
+        ]);
     }
 }

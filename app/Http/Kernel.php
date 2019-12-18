@@ -19,7 +19,7 @@ class Kernel extends HttpKernel
         \App\Http\Middleware\TrimStrings::class,
         \Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull::class,
         \App\Http\Middleware\TrustProxies::class,
-		//\Barryvdh\Cors\HandleCors::class, // global cors, unsuggested
+        \Barryvdh\Cors\HandleCors::class, // global cors, unsuggested
     ];
 
     /**
@@ -60,11 +60,13 @@ class Kernel extends HttpKernel
         'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
 
         'jwt.auth' => \Tymon\JWTAuth\Middleware\GetUserFromToken::class,
-        'jwt.refresh' => \Tymon\JWTAuth\Middleware\RefreshToken::class,     
+        'jwt.refresh' => \Tymon\JWTAuth\Middleware\RefreshToken::class,
+
+        // 'jwt.verify' => \App\Http\Middleware\JwtMiddleware2::class,
 
         // 'jwt.recycle' => \JWTRecycleToken::class,
         // 'signiture' => \SignitureDecryption::class,        
-        'jwt.recycle' => \JWTMiddleware::class,   
-        'mutation'  => \MutationMiddleware::class,      
+        'jwt.recycle' => \JWTMiddleware::class,
+        // 'mutation'  => \MutationMiddleware::class,      
     ];
 }

@@ -6,64 +6,108 @@ use Illuminate\Http\Request;
 
 class TableLibraryLocationController extends Controller
 {
-    use \TableLibraryLocationValidator;
-    use \TableLibraryLocationSchema;
-
     public function index(Request $request)
     {
 
-        // $data = null;
-        switch (request()->type) {
-            case "select":
-                $data = \TableLibraryLocationModel::orderBy('no', 'asc')
-                    ->select(['uuid', 'name_location'])
-                    ->get();
-                break;
-            default:
-                $direction = request()->direction == null ? 'desc' : request()->direction;
-                $data = \TableLibraryLocationModel::orderBy(request()->sortBy, $direction)
-                    ->filterPaginate();
-                break;
-        }
+			switch (request()->type) {
+				case "select":
+					/*
+					$equipment = 'E00'; //request()->equipment_alias;
+					
+					$locations = \TableLibraryLocationModel::all ();
+					return $equipments = \TableLibraryEquipmentLocationModel::where('equipment_alias', $equipment)->get();
+					
+					foreach($equipments as $eq => $equip){
+						echo $location->label_location;
+					}					
+					
+					//$equipments = \TableLibraryEquipmentLocationModel::where('equipment_alias', $equipment)->get();
+					
+					$locations = \TableLibraryLocationModel::orderBy('no', 'asc')
+						->select(['uuid', 'name_location', 'label_location'])
+						->get();
+						
 
-        return resolver($request = $request, $payload = $data, $auth = true);
+					
+					return;
+					*/
+					$data = \TableLibraryLocationModel::orderBy('no', 'asc')
+						->select(['uuid', 'name_location', 'label_location'])
+						->get();
+					break;
+				
+				default:
+					$direction = request()->direction == null ? 'desc' : request()->direction;
+					$data = \TableLibraryLocationModel::orderBy('label_location', $direction)
+						->filterPaginate();
+					break;
+			}
+			
+		return Resolver([
+			'payload'    => $data,
+			'credentials' => [
+				'role'       => role(),
+				// 'token'      => JWTToken(),
+				'logged'     => logged(),
+			]
+		]);
     }
 
-    public function store(Request $request)
-    {
-        $this->librarLocationValidator($form);
-
-        $data = \TableLibraryLocationModel::create($form)->filterPaginate();
-
-        return resolver($request = $request, $payload = $data, $auth = true);
-    }
 
     public function show(Request $request, $uuid)
     {
-        $data = \TableLibraryLocationModel::findOrFail($uuid)->first();
+        $data = \TableLibraryLocationModel::findOrFail($uuid);
 
-        return resolver($request = $request, $payload = $data, $auth = true);
+        return resolver(
+            $request = $request,
+            $payload = $data->first(),
+            $auth = true,
+            $model = 'library/location@show'
+        );
     }
 
     public function update(Request $request)
     {
         $form =  [
             'uuid'              => request()->uuid,
-            'label_location'   => request()->label_location,
-            'name_location'    => request()->name_location,
+            'label_location'    => request()->label_location, // harus lowercase
+            'name_location'     => request()->name_location,
         ];
 
-        $this->librarLocationValidator($form);
+        $label = [];
+        for ($i = 0; $i <= 39; $i++) {
+            if ($i < 10) {
+                $label[$i] = "L0{$i}";
+            } else {
+                $label[$i] = "L{$i}";
+            }
+        }
 
-        $data = \TableLibraryLocationModel::findOrFail(request()->uuid)->update($form)->filterPaginate();
+        $validator = \Validator::make($form, [
+            'uuid'              => 'required|string|max:40|min:40',
+            'label_location'    => 'required|in:' . implode(',', $label),
+            'name_location'     => 'required|string|max:50',
+        ]);
 
-        return resolver($request = $request, $payload = $data, $auth = true);
+        if ($validator->fails()) {
+            return Resolver([
+                'payload'   => $validator->messages(),
+                'status'    => "validation"
+            ]);
+        }
+
+        $data = \TableLibraryLocationModel::whereUuid(request()->uuid);
+        $update = $data->update($form);
+        
+
+        return Resolver([
+            'payload'    => $data->first(),
+            'credentials' => [
+                'role'       => role(),
+                // 'token'      => JWTToken(),
+                'logged'     => logged(),
+            ]
+        ]);
     }
 
-    public function destroy(Request $request, $uuid)
-    {
-        \TableLibraryLocationModel::findOrFail($uuid)->delete();
-
-        return resolver($request = $request, $auth = true);
-    }
 }

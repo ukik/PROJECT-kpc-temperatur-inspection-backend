@@ -12,7 +12,7 @@
         "laravel/framework": "5.8.*",
         "laravel/tinker": "^1.0",
         "spatie/laravel-server-side-rendering": "^0.2",
-        "tymon/jwt-auth": "^0.5.12"
+        "tymon/jwt-auth": "dev-develop"
     },
     "require-dev": {
         "beyondcode/laravel-dump-server": "^1.0",
@@ -32,12 +32,16 @@
             "app/Version1/Schemas",
             "app/Version1/Filters",
             "app/Version1/Utilities",
-            "app/Version1/Validators",
             "app/Version1/Middlewares",
             "app/Version1/Observers",
-            "app/Version1/Statics"
+            "app/Version1/Statics",
+            "app/Version1/Notifications",
+            "app/Version1/Notifications/Channels",
+            "app/Version1/Boots",
+            "app/Version1/Mail"
         ],
         "files": [
+            "app/Version1/Helpers/Auth.php",
             "app/Version1/Helpers/Cache.php",
             "app/Version1/Helpers/Crypto.php",
             "app/Version1/Helpers/Header.php",
@@ -49,7 +53,9 @@
             "app/Version1/Helpers/Secure.php",
             "app/Version1/Helpers/Session.php",
             "app/Version1/Helpers/Sql.php",
-            "app/Version1/Helpers/String.php"
+            "app/Version1/Helpers/String.php",
+            "app/Version1/Helpers/Segment.php",
+            "app/Version1/Helpers/Notification.php"
         ],
         "psr-4": {
             "App\\": "app/"

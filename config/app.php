@@ -1,5 +1,25 @@
 <?php
+/*
+use Illuminate\Support\ServiceProvider;
 
+class ObserversServiceProvider extends ServiceProvider
+{
+
+  public function boot()
+  {
+    \NotificationModel::observe($this->app->make(\NotificationObserver::class));
+  }
+
+  public function register()
+  {
+    $this->app->bindShared(\NotificationObserver::class, function()
+        {
+            return new \NotificationObserver(new \NotificationModel());
+        });
+  }
+
+}
+*/
 return [
 
     /*
@@ -78,7 +98,7 @@ return [
     |
     */
 
-    'locale' => 'en',
+    'locale' => 'id',
 
     /*
     |--------------------------------------------------------------------------
@@ -179,7 +199,8 @@ return [
 
         Barryvdh\Cors\ServiceProvider::class,
         Intervention\Image\ImageServiceProvider::class,
-        Tymon\JWTAuth\Providers\JWTAuthServiceProvider::class,
+
+        Tymon\JWTAuth\Providers\LaravelServiceProvider::class,
 
     ],
 
@@ -230,10 +251,11 @@ return [
         'Validator' => Illuminate\Support\Facades\Validator::class,
         'View' => Illuminate\Support\Facades\View::class,
 
-        'JWTAuth' => Tymon\JWTAuth\Facades\JWTAuth::class, 
-        'JWTFactory' => Tymon\JWTAuth\Facades\JWTFactory::class,                 
+        'JWTAuth' => Tymon\JWTAuth\Facades\JWTAuth::class,
+        'JWTFactory' => Tymon\JWTAuth\Facades\JWTFactory::class,
+
         'Image' => Intervention\Image\Facades\Image::class,
-        
+
     ],
 
 ];

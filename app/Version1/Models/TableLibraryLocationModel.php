@@ -1,5 +1,9 @@
 <?php
 
+// INDEPENDENT TABLE
+// PRE-DEFINITION TABLE
+// NON-CLUSTER
+
 use Illuminate\Database\Eloquent\Model;
 
 class TableLibraryLocationModel extends Model
@@ -7,6 +11,10 @@ class TableLibraryLocationModel extends Model
     use \FilterPaginateAdvanceUtility;
     use \TableLibraryLocationFilter;
     use \TableLibraryLocationAttribute;
+
+    public $incrementing = false;
+    protected $primaryKey = 'uuid';
+    protected $foreignKey = 'label_location';
 
     public function __construct($attributes = [])
     {
@@ -23,11 +31,6 @@ class TableLibraryLocationModel extends Model
         }
     }
 
-    public $incrementing = false;
-
-    protected $primaryKey = 'uuid';
-    protected $foreignKey = 'label_location';
-
     protected $fillable = [
         'name_location',
     ];
@@ -40,8 +43,13 @@ class TableLibraryLocationModel extends Model
         'updated_at',
     ];
 
-    public function many_mutation_inspection()
+    public function tb_library_equipment_location()
     {
-        return $this->hasMany(\TableMutationInspectionModel::class, 'location_inspection', 'label_location');
+        return $this->hasMany(\TableLibraryEquipmentLocationModel::class, 'equipment_alias', 'label_location');
+    }
+
+    public function tb_mutation_inspection()
+    {
+        return $this->hasMany(\TableMutationLocationModel::class, 'uuid_tb_location', 'uuid');
     }
 }

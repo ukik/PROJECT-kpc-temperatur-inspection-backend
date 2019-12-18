@@ -5,7 +5,7 @@
  */
 trait TableEmployeeSchema
 {
-    public function createStaticTable($table = "tb_employee")
+    public function createStaticTableEmployeeSchema($table = "tb_employee")
     {
 
         if(!ifTableExist($table)) {
@@ -28,6 +28,7 @@ trait TableEmployeeSchema
                     `plain_password_employee` varchar(50) NOT NULL DEFAULT '',
                     `photo_employee` varchar(150) DEFAULT NULL,
                     `verification_employee` enum('0','1') NOT NULL DEFAULT '0' COMMENT '0 = unverified, 1 = verified',
+					`verification_token` varchar(255) NOT NULL DEFAULT '',					
                     `disable_employee` enum('0','1') NOT NULL DEFAULT '0' COMMENT '0 = false, 1 = true',
                     `created_at` timestamp NULL DEFAULT NULL,
                     `updated_at` timestamp NULL DEFAULT NULL,

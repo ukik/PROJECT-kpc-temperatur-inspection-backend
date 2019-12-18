@@ -20,6 +20,7 @@ class MutationInspectionSeeder extends Seeder
 
         $equipments = DB::table('tb_library_equipment')->get();
         $locations = DB::table('tb_library_location')->get();
+        $schedules = DB::table('tb_library_schedule')->get();
         $employees = DB::table('tb_employee')->get();
 
         // var_dump($employees[mt_rand(0, count($employees))]->uuid);
@@ -36,8 +37,8 @@ class MutationInspectionSeeder extends Seeder
 
         // $no = 0;
 
-        $myinterval = 365;
-        $mydate = "2017-12-31 00:00:00";
+        $myinterval = 1000;
+        $mydate = "2017-12-31 00:00:00"; // akhir tahun 2017
 
         $startDate = new Carbon\Carbon($mydate); //date("Y-m-d 00:00:00");
         // $stop_date = '2017-12-31 20:24:00';
@@ -52,15 +53,51 @@ class MutationInspectionSeeder extends Seeder
             $year = $endDate->format('Y');
             $month = $endDate->format('m');
 
+            var_dump($year, $month);
+            if ($month > date('m') && $year > date('Y')) {
+                return;
+                break;
+            }
+
             try {
                 if (!ifTableExist("tb_mutation_inspection_{$year}_{$month}")) {
-                    $this->createDynamicTable("tb_mutation_inspection_{$year}_{$month}");
+                    $this->createDynamicTableMutationInspectionSchema("tb_mutation_inspection_{$year}_{$month}");
                 }
             } catch (\Throwable $th) {
                 //throw $th;
             }
 
             // var_dump($endDate->format('Y'));
+
+            $description_collection = [
+                "ada kelainan pada sabuk konveyor dan bagian sambungan.",
+                "transportasi dengan kerusakan yang disebabkan oleh luka, retakan, luka tembus dan penyebab lainnya.",
+                "ada kerusakan pengelupasan interlayer, terutama pada sambungan.",
+                "penutup atas dan bawah dipakai atau tidak, terutama karet penutup atas, periksa apakah baffle batu bara kontak permukaan belt conveyor.",
+                "belt konveyor memiliki setengah keausan.",
+                "ada keausan pada kedua sisi ban berjalan.",
+                "belt conveyor dan braket dipakai karena penyimpangan belt conveyor.",
+                "material memiliki fenomena beban eksentrik.",
+                "sabuk konveyor yang melorot di antara roller normal.",
+                "fenomena bahwa material pada ban berjalan meluap karena jarak rol yang berlebihan",
+                "transportasi tanpa fenomena kerutan dan kendur.",
+                "belt conveyor tergelincir pada roller drive.",
+                "pengerik bekerja dengan baik dan bahwa rol dan rol terjebak dengan material.",
+            ];
+
+            $common_description = [
+                "4 inti memiliki bagian yang rusak",
+                "periksa keausan belt conveyor seminggu sekali. Titik pemeriksaan harus berada pada jarak tertentu dari sambungan.",
+                "periksa operasi seminggu sekali",
+                "mulai jalankan dan periksa perangkat tensioning bekerja setiap minggu.",
+                "setelah satu bulan, periksalah sebulan sekali.",
+                "periksa dua kali setahun setelah tiga bulan operasi.",
+                "selama pemeriksaan, jarak garis standar yang ditetapkan oleh ban berjalan diukur oleh perangkat penegang.",
+                "pemeriksaan visual sendi setiap minggu",
+                "periksa titik pemuatan seminggu sekali",
+                "periksa perangkat pembersih setiap dua hari.",
+                "periksa roller dan roller setiap dua hari",
+            ];
 
             // sehari 2x data
             for ($q = 1; $q <= 2; $q++) {
@@ -82,56 +119,70 @@ class MutationInspectionSeeder extends Seeder
 
                                 $uuid =  "TIS-" . $faker->uuid;
 
+                                $cui =  mt_rand(0, 1);
+                                $lui =  mt_rand(0, 1);
+                                $com =  mt_rand(0, 1);
+
                                 $generated = [
                                     'uuid'                          => $uuid,
-                                    'uuid_tb_inspection'            => $uuid,
+                                    // 'uuid_tb_inspection'            => $uuid,
                                     // 'no'                            => $no++,
                                     'uuid_tb_employee'              => $employees[mt_rand(0, count($employees) - 1)]->uuid,
                                     'uuid_tb_location'              => $lc->value('uuid'), //$locations[mt_rand(0, count($locations) - 1)]->uuid,
                                     'uuid_tb_equipment'             => $eq->value('uuid'), //$equipments[mt_rand(0, count($equipments) - 1)]->uuid,
-                                    //'equipment_inspection'          => $eq, //$equipments[mt_rand(0, count($equipments) - 1)]->label_equipment,
-                                    //'location_inspection'           => $location->name_location, //$locations[mt_rand(0, count($locations) - 1)]->label_location,
+                                    'uuid_tb_schedule'              => $schedules[mt_rand(0, count($schedules) - 1)]->uuid,
                                     'place_inspection'              => $p == 1 ? 'A' : 'B', //strval($value1[1]), //strval(mt_rand(0, 2)),
                                     'condition_inspection'          => strval(mt_rand(1, 3)),
                                     'grease_shoot_inspection'       => mt_rand(1, 100),
-                                    'weather_inspection'            => strval(mt_rand(1, 6)),
-                                    'temperature_inspection'        => mt_rand(0, 100),
-                                    'rain_inspection'               => mt_rand(0, 100),
-                                    'current_upnormal_inspection'   => strval(mt_rand(0, 1)),
-                                    'last_upnormal_inspection'      => strval(mt_rand(0, 1)),
+                                    'weather_inspection'            => strval(mt_rand(0, 5) + 1),
+                                    'temperature_inspection'        => mt_rand(25, 100),
+                                    'rain_inspection'               => mt_rand(15, 75),
+                                    'current_upnormal_inspection'   => strval($cui),
+                                    'current_upnormal_description_inspection'  => $cui == 1 ? $description_collection[mt_rand(0, count($description_collection) - 1)] : NULL,
+                                    'last_upnormal_inspection'      => strval($lui),
+                                    'last_upnormal_description_inspection'  => $lui == 1 ? $description_collection[mt_rand(0, count($description_collection) - 1)] : NULL,
+                                    'common_description_inspection'  => $com == 1 ? $common_description[mt_rand(0, count($common_description) - 1)] : NULL,
                                     'screenshoot_inspection'        => $screenshoots[mt_rand(0, 5)],
+                                    'valid_inspection'              => strval(mt_rand(0, 1)),
                                     'created_at'                    => $endDate,
                                 ];
 
-                                var_dump($generated);
+                                // var_dump($generated);
 
                                 DB::table("tb_mutation_inspection_{$year}_{$month}")->insert($generated);
                             }
                         } else {
 
+                            $cui =  mt_rand(0, 1);
+                            $lui =  mt_rand(0, 1);
+                            $com =  mt_rand(0, 1);
+
                             $uuid =  "TIS-" . $faker->uuid;
                             $generated = [
                                 'uuid'                          => $uuid,
-                                'uuid_tb_inspection'            => $uuid,
+                                // 'uuid_tb_inspection'            => $uuid,
                                 // 'no'                            => $no++,
                                 'uuid_tb_employee'              => $employees[mt_rand(0, count($employees) - 1)]->uuid,
                                 'uuid_tb_location'              => $lc->value('uuid'), //$locations[mt_rand(0, count($locations) - 1)]->uuid,
                                 'uuid_tb_equipment'             => $eq->value('uuid'), //$equipments[mt_rand(0, count($equipments) - 1)]->uuid,
-                                //'equipment_inspection'          => $equipment->name_equipment, //$equipments[mt_rand(0, count($equipments) - 1)]->label_equipment,
-                                //'location_inspection'           => $location->name_location, //$locations[mt_rand(0, count($locations) - 1)]->label_location,
+                                'uuid_tb_schedule'              => $schedules[mt_rand(0, count($schedules) - 1)]->uuid,
                                 'place_inspection'              => NULL, //strval($value1[1]), //strval(mt_rand(0, 2)),
-                                'condition_inspection'          => strval(mt_rand(0, 2)),
+                                'condition_inspection'          => strval(mt_rand(1, 3)),
                                 'grease_shoot_inspection'       => mt_rand(1, 100),
-                                'weather_inspection'            => strval(mt_rand(0, 5)),
-                                'temperature_inspection'        => mt_rand(0, 100),
-                                'rain_inspection'               => mt_rand(0, 100),
-                                'current_upnormal_inspection'   => strval(mt_rand(0, 1)),
-                                'last_upnormal_inspection'      => strval(mt_rand(0, 1)),
+                                'weather_inspection'            => strval(mt_rand(0, 5) + 1),
+                                'temperature_inspection'        => mt_rand(25, 100),
+                                'rain_inspection'               => mt_rand(15, 75),
+                                'current_upnormal_inspection'   => strval($cui),
+                                'current_upnormal_description_inspection'  => $cui == 1 ? $description_collection[mt_rand(0, count($description_collection) - 1)] : NULL,
+                                'last_upnormal_inspection'      => strval($lui),
+                                'last_upnormal_description_inspection'  => $lui == 1 ? $description_collection[mt_rand(0, count($description_collection) - 1)] : NULL,
+                                'common_description_inspection'  => $com == 1 ? $common_description[mt_rand(0, count($common_description) - 1)] : NULL,
                                 'screenshoot_inspection'        => $screenshoots[mt_rand(0, 5)],
+                                'valid_inspection'              => strval(mt_rand(0, 1)),
                                 'created_at'                    => $endDate,
                             ];
 
-                            var_dump($generated);
+                            // var_dump($generated);
 
                             DB::table("tb_mutation_inspection_{$year}_{$month}")->insert($generated);
                         }

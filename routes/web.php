@@ -11,12 +11,26 @@
 |
 */
 
-// use App\Version1\Model\EmployeeModel;
+//Route::pattern('url', '.*');
 
-Route::pattern('url', '.*');
+Route::get('/', 'WelcomeController')->name('home');
 
-Route::get('/', 'WelcomeController');
+Route::get('/verified/{token}', function($token){
+	$model = \TableEmployeeModel::where('verification_token', $token);
+	$check = $model->first();
+	if($check){
+		$model->update(['verification_token' => null, 'verification_employee' => '1']);
+		
+		return view('verified');	      
+	}
+	return redirect("/re-verification");   		
+});
 
-Route::get('vue/{url?}', 'VueController');
+Route::get('/re-verification', function(){
+	return view('re-verification');	      
+})->name('re-verification');
 
-Route::get('react/{url?}', 'ReactController');
+
+Route::get('/{any}', function($token){
+	return redirect('/');      
+})->where('any', '.*');

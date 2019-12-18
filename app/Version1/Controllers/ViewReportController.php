@@ -12,38 +12,88 @@ class ViewReportController extends Controller
 
     public function index(Request $request)
     {
-        // validate params + create session table name
-        paramMonthYearValidator();
-                
+
         $data = null;
         try {
-            // orderBy(request()->sortBy, request()->direction)->
             switch ($request->search_column) {
                 case 'week':
-                    $data = ViewReportModel::groupBy(['day', 'uuid_tb_equipment', 'uuid_tb_location'])->filterPaginate();
+                    new ViewReportModel;
+
+                    if ((getter('table_week_overlap'))) {
+                        $data = \DB::table(getter('table_week'))->whereUuidTbEquipment(request()->uuid_tb_equipment)
+                            ->whereUuidTbLocation(request()->uuid_tb_location)
+                            ->wherePlaceInspection(request()->place_inspection)
+                            ->whereWeek(request()->search_interval)
+							->whereValidInspection(1)
+                            ->orderBy('day', 'asc')
+                            ->groupBy(['day_name']);
+
+                        $data = \DB::table(getter('table_week_overlap'))->whereUuidTbEquipment(request()->uuid_tb_equipment)
+                            ->whereUuidTbLocation(request()->uuid_tb_location)
+                            ->wherePlaceInspection(request()->place_inspection)
+                            ->whereWeek(request()->search_interval)
+							->whereValidInspection(1)
+                            ->orderBy('day', 'asc')
+                            ->groupBy(['day_name'])->union($data)
+                            ->get();
+                    } else if ((getter('table_week'))) {
+                        $data = \DB::table(getter('table_week'))->whereUuidTbEquipment(request()->uuid_tb_equipment)
+                            ->whereUuidTbLocation(request()->uuid_tb_location)
+                            ->wherePlaceInspection(request()->place_inspection)
+                            ->whereWeek(request()->search_interval)
+							->whereValidInspection(1)
+                            ->orderBy('day', 'asc')
+                            ->groupBy(['day_name'])
+                            ->get();
+                    } else {
+                        $data = ViewReportModel::whereUuidTbEquipment(request()->uuid_tb_equipment)
+                            ->whereUuidTbLocation(request()->uuid_tb_location)
+                            ->wherePlaceInspection(request()->place_inspection)
+                            ->whereWeek(request()->search_interval)
+							->whereValidInspection(1)
+                            ->orderBy('day', 'asc')
+                            ->groupBy(['day_name'])
+                            ->get();
+                    }
+                    // return SqlWithBinding($data->toSql(), $data->getBindings());
+                    // $data->get();
                     break;
                 case 'month':
-                    $data = ViewReportModel::groupBy(['week', 'uuid_tb_equipment', 'uuid_tb_location'])->filterPaginate();
+                    $data = ViewReportModel::whereUuidTbEquipment(request()->uuid_tb_equipment)
+                        ->whereUuidTbLocation(request()->uuid_tb_location)
+                        ->wherePlaceInspection(request()->place_inspection)
+                        ->where('month', (request()->search_interval))
+						->whereValidInspection(1)
+                        ->orderBy('week', 'asc')
+                        ->groupBy(['week'])
+                        ->get();
+
+                    // return SqlWithBinding($data->toSql(), $data->getBindings());
                     break;
                 case 'quartal':
-                    $data = ViewReportModel::groupBy(['month', 'uuid_tb_equipment', 'uuid_tb_location'])->filterPaginate();
+                    $data = ViewReportModel::whereUuidTbEquipment(request()->uuid_tb_equipment)
+                        ->whereUuidTbLocation(request()->uuid_tb_location)
+                        ->wherePlaceInspection(request()->place_inspection)
+						->whereValidInspection(1)
+                        ->orderBy('month', 'asc')
+                        ->groupBy(['month_name'])
+                        ->get();
                     break;
             }
         } catch (\Throwable $th) {
             throw $th;
         }
+		
+		
 
-        // return response()
-        //     ->json([\ViewReportModel::filterPaginate()]);
-        // return SqlWithBinding($data->toSql(), $data->getBindings());
-
-        return resolver($request = $request, $payload = $data, $auth = true);
+        return Resolver([
+            'payload'    => $data,
+            'credentials' => [
+                'role'       => role(),
+                // 'token'      => JWTToken(),
+                'logged'     => logged(),
+            ]
+        ]);
     }
 
-    public function show(Request $request, $uuid)
-    {
-        $data = \ViewReportModel::findOrFail($uuid)->first();
-
-        return resolver($request = $request, $payload = $data, $auth = true);
-    }
 }

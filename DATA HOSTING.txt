@@ -1,0 +1,44 @@
+db: rzedixky_kpc_conveyer_inspector
+password: bn3-Xb)6pSkO
+user: rzedixky_rzedixky
+
+// agar view berjalan baik
+// ubah di cofig/database.php menjadi 
+
+        'mysql' => [
+            'driver' => 'mysql',
+            'host' => env('DB_HOST', '127.0.0.1'),
+            'port' => env('DB_PORT', '3306'),
+            'database' => env('DB_DATABASE', 'forge'),
+            'username' => env('DB_USERNAME', 'forge'),
+            'password' => env('DB_PASSWORD', ''),
+            'unix_socket' => env('DB_SOCKET', ''),
+            'charset' => 'utf8mb4',
+            'collation' => 'utf8mb4_unicode_ci',
+            'prefix' => '',
+            'strict' => false,
+            'engine' => null,
+            'options'   => [
+                \PDO::ATTR_EMULATE_PREPARES => true
+            ],            
+            'modes' => [
+                'STRICT_ALL_TABLES',
+                'ERROR_FOR_DIVISION_BY_ZERO',
+                'NO_ZERO_DATE',
+                'NO_ZERO_IN_DATE',
+                'NO_AUTO_CREATE_USER',
+            ],            
+        ],
+		
+// setelah public folder dipindah ke root
+// ubah di index.php menjadi
+
+	require __DIR__.'/{nama folder laravel}/vendor/autoload.php';
+
+	$app = require_once __DIR__.'/{nama folder laravel}/bootstrap/app.php';
+
+	// tambahkan ini dibawah $app sehingga semua upload akan diarahkan ke root bukan ke laravel/public
+	// set the public path to this directory
+	$app->bind('path.public', function() {
+		return __DIR__;
+	});

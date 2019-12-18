@@ -3,17 +3,23 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Intervention\Image\ImageManagerStatic;
+
+use App\User;
 
 class AuthController extends Controller
 {
-    use \EmployeeValidator;
+    public function __construct()
+    {
+        setter('private', false);
+    }
 
     public function register(Request $request)
     {
         $form =  [
-            'uuid'                      => 'TEM-'.uuid(), 
-            'name_employee'             => request()->name_employee,  
-            'position_employee'         => request()->position_employee,
+            'uuid'                      => 'TEM-' . uuid(),
+            'name_employee'             => request()->name_employee,
+            'position_employee'         => strval(request()->position_employee),
             'nik_employee'              => request()->nik_employee,
             'telpon_employee'           => request()->telpon_employee,
             'email_employee'            => request()->email_employee,
@@ -23,122 +29,243 @@ class AuthController extends Controller
             'marital_employee'          => request()->marital_employee,
             'address_employee'          => request()->address_employee,
             'password_employee'         => request()->password_employee,
-            // 'plain_password_employee'   => request()->password_employee,
             'photo_employee'            => request()->photo_employee,
-            // 'verification_employee'     => request()->verification_employee,  
         ];
 
-        $this->employeeValidation($form);
-
-        // try {
-        //     ImageManagerStatic::make(request()->photo_employee);
-        //     $foto = true;
-        // } catch (\Exception $e) {
-        //     $foto = false;
-        // }
-
-        // if($foto){
-
-        //     $validator = \Validator::make([ 'photo_employee' => request()->foto ], [         
-        //         'photo_employee'  => 'bail|required|imageable',
-        //     ]);     
-
-        //     if($validator->fails()) {
-        //         warning([
-        //             'fails' => true,
-        //             'messages' => $validator->messages(),
-        //         ]);   
-        //     }        
-            
-        //     if($request->get('photo_employee')) {
-        //         $image = $request->get('photo_employee');
-        //         $name = time().'.' . explode('/', explode(':', substr($image, 0, strpos($image, ';')))[1])[1];
-
-        //         if (!file_exists(public_path('images/employee/'))) {
-        //                 mkdir(public_path('images/employee/'), 666, true);
-        //             }
-
-        //         \Image::make($request->get('photo_employee'))->save(public_path('images/employee/').$name);
-        //     }
-                
-        //     $form['photo_employee'] = 'images/employee/'.$name;
-
-        // } else {
-
-        //     $form['photo_employee'] = './images/no-menu-1.png';
-
-        // }         
-
-        // $validator = \Validator::make($form, [
-        //     'uuid'                      => 'required|string|min:39|max:40|unique:tb_employee',
-        //     'name_employee'             => 'required|string|max:50', 
-        //     'position_employee'         => 'required|in:0,1,2',
-        //     'nik_employee'              => 'required|string|min:15|max:16|unique:tb_employee',
-        //     'telpon_employee'           => 'required|max:20',
-        //     'email_employee'            => 'required|email|max:50|unique:tb_employee',
-        //     'birth_place_employee'      => 'required|string|max:50',
-        //     'birth_date_employee'       => 'required|string|max:10',
-        //     'gender_employee'           => 'required|in:0,1',
-        //     'marital_employee'          => 'required|in:0,1',
-        //     'address_employee'          => 'required|string',
-        //     'password_employee'         => 'required|string|max:50',
-        //     // 'plain_password_employee'   => 'required|string|max:50',
-        //     'photo_employee'            => 'imageable',
-        //     // 'verification_employee'     => 'required|in:0,1',
-        // ]);
-
-        // if($validator->fails()) {
-        //     warning([
-        //         'fails' => true,
-        //         'messages' => $validator->messages(),
-        //     ]);     
-        // }
-
-        $form['password_employee'] = bcrypt(request()->password_employee);
-        $form['plain_password_employee'] = bcrypt(request()->password_employee);
-
-        $data = \EmployeeModel::create($form);
-
-        return resolve([
-            $payload    = null, 
-            $role       = $data->position_employee, 
-            $token      = JWTCreate(($data)), 
-            $auth       = true,
+        $validator = \Validator::make($form, [
+            'uuid'                      => 'required|string|max:40|min:40',
+            'name_employee'             => 'required|string|max:50',
+            'position_employee'         => 'required|in:0,1,2',
+            'nik_employee'              => 'required|string|digits:16|unique:tb_employee,nik_employee',
+            'telpon_employee'           => 'required|max:20',
+            'email_employee'            => 'required|email|max:50|unique:tb_employee,email_employee',
+            'birth_place_employee'      => 'required|string|max:50',
+            'birth_date_employee'       => 'required|string|max:10',
+            'gender_employee'           => 'required|in:0,1',
+            'marital_employee'          => 'required|in:0,1',
+            'address_employee'          => 'required|string',
+            'password_employee'         => 'required|string|max:50',
         ]);
 
+        if ($validator->fails()) {
+            return Resolver([
+                'payload'   => $validator->messages(),
+                'status'    => "validation"
+            ]);
+        }
+
+        try {
+            ImageManagerStatic::make(request()->photo_employee);
+            $foto = true;
+        } catch (\Exception $e) {
+            $foto = false;
+        }
+
+        $model = \TableEmployeeModel::class;
+
+        if ($foto) {
+
+            $validator = \Validator::make(['photo_employee' => request()->photo_employee], [
+                'photo_employee'  => 'bail|required|imageable',
+            ]);
+
+            if ($validator->fails()) {
+                return Resolver([
+                    'payload'   => $validator->messages(),
+                    'status'    => "validation"
+                ]);
+            }
+
+            if ($request->get('photo_employee')) {
+                $image = $request->get('photo_employee');
+                $name = time() . '.' . explode('/', explode(':', substr($image, 0, strpos($image, ';')))[1])[1];
+
+                if (!file_exists(public_path('images/karyawan/'))) {
+                    mkdir(public_path('images/karyawan/'), 666, true);
+                }
+
+                \Image::make($request->get('photo_employee'))->save(public_path('images/karyawan/') . $name);
+            }
+
+            $form['photo_employee'] = $request->getSchemeAndHttpHost().'/images/karyawan/' . $name;
+        } else {
+            $form['photo_employee'] = $request->getSchemeAndHttpHost().'/images/no-menu-1.png';
+        }
+
+        $form['password_employee'] = bcrypt(request()->password_employee);
+        $form['plain_password_employee'] = request()->password_employee;
+
+        $data = $model::create($form);
+
+        \Mail::to(env('MAIL_USERNAME', null))->send(new \NewRegisterAdminMail($data->first()));
+        \Mail::to($data->email_employee)->send(new \NewRegisterUserMail($data->first()));
+
+        $data->notify(new \NewEmployeeNotification($data));
+        // \Notification::send($data, new \NewEmployeeNotification($data));
+
+        return Resolver([
+            'payload'    => $data,
+			'status'	=> 'public-karyawan-registered',
+            'credentials' => [
+                'role'       => null,
+                'token'      => null,
+                'logged'     => logged(),
+            ]
+        ]);
     }
 
-    public function login()
+    public function login(Request $request)
     {
-        $user = \EmployeeModel::whereEmail(request()->email)->first();
-        // $user = \EmployeeModel::first();
+		$model = \TableEmployeeModel::class;
+		
+		$disable = $model::whereEmailEmployee(request()->email_employee)->where('disable_employee', '1')->first();
+		if($disable){
+			return Resolver([
+				'payload'    => null,
+				'status'	 => 'disable',
+				'credentials' => [
+					'token'      => null,
+					'role'       => null,
+					'logged'     => false,
+				]
+			]);			
+		}
 
-        return resolve(
-            $payload    = $user, 
-            $role       = $user->position_employee, 
-            $token      = JWTCreate(($user)), 
-            $auth       = true);
+		$unverified = $model::whereEmailEmployee(request()->email_employee)->where('verification_token', '!=', "")->first();
+		if($unverified){
+			return Resolver([
+				'payload'    => null,
+				'status'	 => 'unverified',
+				'credentials' => [
+					'token'      => null,
+					'role'       => null,
+					'logged'     => false,
+				]
+			]);			
+		}
+
+        $credentials = [
+            'email' => request()->email_employee,
+            'password' => request()->password_employee,
+        ];
+
+        try {
+            // tidak bisa pakai token ini, karena field tb_employee
+            // email_employee && password_employee
+            // sementara field email && password di view users hanya untuk attempt saja
+            // attempt = login
+            if (!$token = \JWTAuth::attempt($credentials)) {
+                return response()->json([
+                    'token' => 'invalid_credentials'
+                ], 400);
+            }
+        } catch (JWTException $e) {
+            return response()->json([
+                'token' => 'could_not_create_token'
+            ], 500);
+        }
+
+        $data = $model::whereEmailEmployee(request()->email_employee)->first(); //\TableEmployeeModel::whereEmailEmployee(request()->email_employee)->first();
+
+        // create new token base tb_employee
+        $token = JWTCreate(($data));
+
+        return Resolver([
+            'payload'    => $data,
+            'credentials' => [
+                'token'      => $token,
+                'role'       => $data->position_employee,
+                'logged'     => $token ? true : false,
+            ]
+        ]);
     }
 
-    public function logout(Type $var = null)
+    public function forget(Request $request)
+    {
+        $data = \TableEmployeeModel::whereEmailEmployee(request()->email_employee)->first();
+
+        if (!$data) {
+            return Resolver([
+                'payload'   => null,
+                'status'    => "invalid_email"
+            ]);
+        }
+
+        $token = JWTCreate($data);
+        setter('token', $token);
+
+        try {
+            \Mail::to(request()->email_employee)->send(new \ForgetPasswordUserMail($data));
+        } catch (\Throwable $th) {
+            //throw $th;
+        }
+
+        return Resolver([
+            'status'       => 'forget',
+            'payload'    => null,
+            'credentials' => [
+                'token'      => null,
+                'role'       => null,
+                'logged'     => false,
+            ]
+        ]);
+    }
+
+    public function verification(Request $request)
+    {
+        $data = \TableEmployeeModel::whereEmailEmployee(request()->email_employee)->first();
+
+        if (!$data) {
+            return Resolver([
+                'payload'   => null,
+                'status'    => "invalid_email"
+            ]);
+        }
+
+        $token = JWTCreate($data);
+        setter('token', $token);
+
+        try {
+            \Mail::to(request()->email_employee)->send(new \ReVerificationUserMail($data));
+        } catch (\Throwable $th) {
+            //throw $th;
+        }
+
+        return Resolver([
+            'status'       => 're-verification',
+            'payload'    => null,
+            'credentials' => [
+                'token'      => null,
+                'role'       => null,
+                'logged'     => false,
+            ]
+        ]);
+    }
+
+    public function logout()
     {
         JWTRevoke();
 
-        return resolve([
-            $payload    = null, 
-            $role       = null, 
-            $token      = null, 
-            $auth       = false,
+        return Resolver([
+            'payload'    	=> null,
+			'status'		=> 'logout',
+            'credentials' 	=> [
+                'role'       => null,
+                'token'      => null,
+                'logged'     => false,
+            ]
         ]);
     }
 
     public function refresh() // unused
     {
-        return resolve([
-            $payload    = JWTUser(), 
-            $role       = JWTUser()->position_employee, 
-            $token      = JWTRefresh(), 
-            $auth       = true,
-        ]);        
+        return Resolver([
+            'payload'    => null,
+            'credentials' => [
+                'role'       => role(),
+                'token'      => JWTRefresh(),
+                'logged'     => logged(),
+            ]
+        ]);
     }
 }
